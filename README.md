@@ -29,8 +29,8 @@ One can load configurations simply by calling a helper function
 from config_loader import load_configs
 config_filepaths = ["config/config1.toml", "config/config2.toml"]
 configs = load_configs(config_filepaths)
-configs["config1"] = ...
-configs["config2"] = ...
+print(configs["config1"])
+print(configs["config2"])
 ```
 
 ### Loading Multiple Configuration Files
