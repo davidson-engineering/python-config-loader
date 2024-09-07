@@ -1,0 +1,22 @@
+name = "Example"
+version = 1.0
+
+[settings]
+debug = true
+path = "/var/data"
+max_connections = 10
+threshold = 0.85
+timeout = 30.5
+
+[settings.nested_dict]
+inner_key = "inner_value"
+inner_list = [1, 2, 3]
+
+[[settings.complex_list]]
+key1 = "value1"
+
+[[settings.complex_list]]
+key2 = "value2"
+
+[[settings.complex_list]]
+key3 = [10, 20, 30]
