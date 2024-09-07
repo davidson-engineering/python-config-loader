@@ -34,7 +34,7 @@ configs = config_loader.load()
 config1 = configs["config1"]  # Access merged configuration for config1.toml
 config2 = configs["config2"]  # Access merged configuration for config2.toml
 ```
-### Loading via function
+### Loading Via function
 One can load configurations simply by calling a helper function
 ```python
 from config_loader import load_configs
