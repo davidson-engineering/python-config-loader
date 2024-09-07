@@ -24,15 +24,6 @@ config1 = config_loader.load()
 print(config1)  # Returns the merged configuration for config1.toml
 ```
 
-One can load configurations simply by calling a helper function
-```python
-from config_loader import load_configs
-config_filepaths = ["config/config1.toml", "config/config2.toml"]
-configs = load_configs(config_filepaths)
-print(configs["config1"])
-print(configs["config2"])
-```
-
 ### Loading Multiple Configuration Files
 
 You can load and merge multiple configuration files at once. Each configuration will be merged with its corresponding default configuration (if it exists):
@@ -48,6 +39,15 @@ configs = config_loader.load()
 
 config1 = configs["config1"]  # Access merged configuration for config1.toml
 config2 = configs["config2"]  # Access merged configuration for config2.toml
+```
+### Loading via function
+One can load configurations simply by calling a helper function
+```python
+from config_loader import load_configs
+config_filepaths = ["config/config1.toml", "config/config2.toml"]
+configs = load_configs(config_filepaths)
+print(configs["config1"])
+print(configs["config2"])
 ```
 
 ### Providing a Custom Default File
