@@ -1,5 +1,5 @@
 [project]
-name = "project_or_module_name"
+name = "python-project-configurator"
 description = "A_short_description"
 
 # If a project, then you can specify version here
@@ -26,7 +26,7 @@ classifiers = [
 
 # dependencies = [
 #    "numpy",
-#    "my_module @ git+https://github.com/my_github/my_repo.git@tag", 
+#    "my_module @ git+https://github.com/my_github/my_repo.git@tag",
 # ]
 
 # If a module, then use fetch version from src/module_name/__init__.py
