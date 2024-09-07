@@ -3,12 +3,6 @@
 
 The `ConfigLoader` class is designed to handle configurations in multiple file formats (JSON, YAML, TOML). It allows you to merge configuration files, and optionally, you can provide a default configuration for each file.
 
-## Installation
-
-```
-pip install -r requirements.txt
-```
-
 ## Usage
 ### Basic Usage with a Single Configuration File
 
