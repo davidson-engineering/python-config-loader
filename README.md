@@ -1,4 +1,4 @@
-# ConfigLoader
+# python-config-loader
 ## A module to load user configuration files from multiple formats, with support for default configurations.
 
 The `ConfigLoader` class is designed to handle configurations in multiple file formats (JSON, YAML, TOML). It allows you to merge configuration files, and optionally, you can provide a default configuration for each file.
@@ -22,6 +22,15 @@ config1_filepath = "config/config1.toml"
 config_loader = ConfigLoader(config1_filepath)
 config1 = config_loader.load()
 print(config1)  # Returns the merged configuration for config1.toml
+```
+
+One can load configurations simply by calling a helper function
+```python
+from config_loader import load_configs
+config_filepaths = ["config/config1.toml", "config/config2.toml"]
+configs = load_configs(config_filepaths)
+configs["config1"] = ...
+configs["config2"] = ...
 ```
 
 ### Loading Multiple Configuration Files
