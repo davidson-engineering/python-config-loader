@@ -1,71 +1,13 @@
 import pytest
 from pathlib import Path
 from config_loader import ConfigLoader
+from config_loader.config_loader import DuplicateConfigKeyError
 
-# Sample file paths for testing (assuming you have these test files in a `tests` directory)
-YAML_FILE = Path("tests/config-test.yaml")
-TOML_FILE = Path("tests/config-test.toml")
-JSON_FILE = Path("tests/config-test.json")
-TOML2_FILE = Path("tests/config2-test.toml")
-YAML_DEFAULT = Path("tests/default/config-default.yaml")
-TOML_DEFAULT = Path("tests/default/config-default.toml")
+from tests.conftest import config_file_mapping
 
 
-@pytest.fixture
-def yaml_config():
-    return ConfigLoader([YAML_FILE])
-
-
-@pytest.fixture
-def toml_config():
-    return ConfigLoader([TOML_FILE])
-
-
-@pytest.fixture
-def json_config():
-    return ConfigLoader([JSON_FILE])
-
-
-@pytest.fixture
-def multiple_configs():
-    return ConfigLoader([YAML_FILE, TOML2_FILE])
-
-
-@pytest.fixture
-def multiple_configs_duplicate():
-    return ConfigLoader([YAML_FILE, TOML_FILE])
-
-
-def test_yaml_loading(yaml_config):
-    config = yaml_config.load()
-    assert config["name"] == "Example"
-    assert config["version"] == 1.0
-    assert config["settings"]["debug"] is True
-    assert config["settings"]["max_connections"] == 10
-    assert config["settings"]["threshold"] == 0.85
-    assert config["settings"]["timeout"] == 30.5
-    assert config["settings"]["nested_dict"]["inner_key"] == "inner_value"
-    assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
-    assert config["settings"]["complex_list"][0]["key1"] == "value1"
-    assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]
-
-
-def test_toml_loading(toml_config):
-    config = toml_config.load()
-    assert config["name"] == "Example"
-    assert config["version"] == 1.0
-    assert config["settings"]["debug"] is True
-    assert config["settings"]["max_connections"] == 10
-    assert config["settings"]["threshold"] == 0.85
-    assert config["settings"]["timeout"] == 30.5
-    assert config["settings"]["nested_dict"]["inner_key"] == "inner_value"
-    assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
-    assert config["settings"]["complex_list"][0]["key1"] == "value1"
-    assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]
-
-
-def test_json_loading(json_config):
-    config = json_config.load()
+def test_file_loading(config_file):
+    config = config_file.load()
     assert config["name"] == "Example"
     assert config["version"] == 1.0
     assert config["settings"]["debug"] is True
@@ -79,7 +21,7 @@ def test_json_loading(json_config):
 
 
 def test_duplicate_loading(multiple_configs_duplicate):
-    with pytest.raises(ValueError):
+    with pytest.raises(DuplicateConfigKeyError):
         multiple_configs_duplicate.load()
 
 
@@ -150,7 +92,9 @@ def test_merge_configs_function():
 
 
 def test_custom_default_filepath():
-    config_loader = ConfigLoader([YAML_FILE], default_filepath=TOML_DEFAULT)
+    FILE1 = config_file_mapping["yaml"]
+    DEFAULT_DIRECTORY = Path("tests/default2/")
+    config_loader = ConfigLoader([FILE1], default_directory=DEFAULT_DIRECTORY)
     config = config_loader.load()
     assert config["name"] == "Example"
     assert config["version"] == 1.0
@@ -162,13 +106,34 @@ def test_custom_default_filepath():
     assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
     assert config["settings"]["complex_list"][0]["key1"] == "value1"
     assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]
-    assert config["settings"]["clarity"] == 0.9
+    assert config["settings"]["default_unique_key"] == "other_value"
+
+
+def test_custom_default_incorrect_suffix():
+    FILE = config_file_mapping["json"]
+    DEFAULT_DIRECTORY = Path("tests/default2/")
+    config_loader = ConfigLoader([FILE], default_directory=DEFAULT_DIRECTORY)
+    config = config_loader.load()
+    assert config["name"] == "Example"
+    assert config["version"] == 1.0
+    assert config["settings"]["debug"] is True
+    assert config["settings"]["max_connections"] == 10
+    assert config["settings"]["threshold"] == 0.85
+    assert config["settings"]["timeout"] == 30.5
+    assert config["settings"]["nested_dict"]["inner_key"] == "inner_value"
+    assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
+    assert config["settings"]["complex_list"][0]["key1"] == "value1"
+    assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]
+    assert config["settings"]["default_unique_key"] == "other_value"
 
 
 def test_load_configs_function(multiple_configs):
     from config_loader import load_configs
 
-    configs = load_configs([YAML_FILE, TOML2_FILE])
+    FILE1 = config_file_mapping["yaml"]
+    FILE2 = config_file_mapping["toml2"]
+
+    configs = load_configs([FILE1, FILE2])
     for config in configs:
         assert configs[config]["name"] == "Example"
         assert configs[config]["version"] == 1.0
@@ -176,3 +141,38 @@ def test_load_configs_function(multiple_configs):
         assert configs[config]["settings"]["max_connections"] == 10
         assert configs[config]["settings"]["threshold"] == 0.85
         assert configs[config]["settings"]["timeout"] == 30.5
+
+
+def test_default_only(default_only_config):
+    """
+    [primary]
+    primary_0 = 'A'
+    primary_1 = 'B'
+    primary_2 = 'C'
+
+    [primary.secondary]
+    secondary_0 = 'D'
+    secondary_1 = 'E'
+    secondary_2 = 'F'
+
+    [primary.secondary.tertiary]
+    tertiary_0 = 'G'
+    tertiary_1 = 'H'
+    tertiary_2 = 'I'
+    """
+    config = default_only_config.load()
+
+    assert config["primary"]["primary_0"] == "A"
+    assert config["primary"]["primary_1"] == "B"
+    assert config["primary"]["primary_2"] == "C"
+    assert config["primary"]["secondary"]["secondary_0"] == "D"
+    assert config["primary"]["secondary"]["secondary_1"] == "E"
+    assert config["primary"]["secondary"]["secondary_2"] == "F"
+    assert config["primary"]["secondary"]["tertiary"]["tertiary_0"] == "G"
+    assert config["primary"]["secondary"]["tertiary"]["tertiary_1"] == "H"
+    assert config["primary"]["secondary"]["tertiary"]["tertiary_2"] == "I"
+
+    assert len(config) == 1
+    assert len(config["primary"]) == 4
+    assert len(config["primary"]["secondary"]) == 4
+    assert len(config["primary"]["secondary"]["tertiary"]) == 3

@@ -52,10 +52,10 @@ If you want to provide a custom default configuration file (instead of using the
 from config_loader import ConfigLoader
 
 config1_filepath = "config/config1.yaml"
-default_filepath = "custom/default/global-default.yaml"
+default_filepath = "custom/default/"
 config_loader = ConfigLoader(config1_filepath, default_filepath=default_filepath)
 config = config_loader.load()
-print(config)  # Merged configuration with global-default.yaml
+print(config)  # Merged configuration with 'custom/default/config1-default.yaml'
 ```
 
 ### Preventing Key Conflicts
@@ -67,7 +67,7 @@ from config_loader import ConfigLoader
 
 config1_filepath = "config/config1.yaml"
 config2_filepath = "config/config1.json"  # Conflict due to same stem as config1.yaml
-config_loader = ConfigLoader([config1_filepath, config2_filepath])  # Raises ValueError
+config_loader = ConfigLoader([config1_filepath, config2_filepath])  # Raises DuplicateConfigKeyError
 ```
 
 ### Supported Formats

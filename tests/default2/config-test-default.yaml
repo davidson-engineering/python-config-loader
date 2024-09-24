@@ -1,0 +1,16 @@
+name: Default
+version: 1.0
+settings:
+  debug: false
+  path: /default/path
+  max_connections: 5
+  threshold: 0.50
+  nested_dict:
+    inner_key: default_value
+    inner_list:
+      - 0
+  complex_list:
+    - key1: default_value
+    - key3:
+        - 0
+  default_unique_key: other_value

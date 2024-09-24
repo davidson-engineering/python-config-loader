@@ -1,0 +1,15 @@
+[primary]
+primary_0 = 'A'
+primary_1 = 'B'
+primary_2 = 'C'
+
+[primary.secondary]
+secondary_0 = 'D'
+secondary_1 = 'E'
+secondary_2 = 'F'
+
+[primary.secondary.tertiary]
+tertiary_0 = 'G'
+tertiary_1 = 'H'
+tertiary_2 = 'I'
+
