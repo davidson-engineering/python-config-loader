@@ -3,7 +3,7 @@ from pathlib import Path
 from config_loader import ConfigLoader
 from config_loader.config_loader import DuplicateConfigKeyError
 
-from tests.conftest import config_file_mapping
+from conftest import config_file_mapping
 
 
 def test_file_loading(config_file):
