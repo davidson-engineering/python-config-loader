@@ -86,42 +86,65 @@ For example:
 
 - If loading `config1.yaml`, the loader will check for `config/default/config1-default.yaml`.
 
-## Testing
+### Secrets Parsing in Configurations
 
-You can run the tests using pytest:
+In addition to loading and merging configurations, the `ConfigLoader` supports parsing environment variables from configuration files. This is particularly useful when you want to keep sensitive information, such as API keys or database credentials, outside of your configuration files and load them dynamically from environment variables.
 
-```console
-pytest tests/
-```
+The `parse_secrets` method is designed to scan your configuration for placeholders in the format `${VAR_NAME}` and replace them with the values of corresponding environment variables. You can also load secrets from an external file (e.g., .env file), allowing you to securely manage sensitive data.
 
-### Example test structures:
-#### YAML
+### Example Configuration with Secrets
+
+Here’s an example of a configuration file (config/config1.yaml) with placeholders for environment variables:
+
 ```yaml
-name: "Example"
-version: 1.0
-settings:
-  debug: true
-  max_connections: 10
-  threshold: 0.85
+
+database:
+  username: "user123"
+  password: "${DB_PASSWORD}"  # This will be replaced by the value of the DB_PASSWORD environment variable
+  host: "localhost"
+apikey: "${API_KEY}"  # This will be replaced by the value of the API_KEY environment variable
 ```
-#### TOML
-```toml
-name = "Example"
-version = 1.0
-[settings]
-debug = true
-max_connections = 10
-threshold = 0.85
+
+### Setting Up Environment Variables
+
+You can set the required environment variables before running the code:
+
+```bash
+export DB_PASSWORD="mysecretpassword"
+export API_KEY="abcd1234"
 ```
-#### JSON
-```json
+
+Alternatively, you can load these variables from a secrets file:
+
+```bash
+DB_PASSWORD=mysecretpassword
+API_KEY=abcd1234
+```
+### Loading Configuration with Secrets Parsing
+
+To load the configuration file and replace the environment variables, use the load_configs function and pass the secrets_filepath parameter:
+
+```python
+from config_loader import load_configs
+
+config_filepath = "config/config1.yaml"
+secrets_filepath = "path/to/secrets.env"  # Optional, if you want to load secrets from a file
+
+configs = load_configs(config_filepath, secrets_filepath=secrets_filepath)
+print(configs)
+```
+### Expected Output
+
+If the environment variables are set or loaded from the secrets file, the placeholders in the configuration will be replaced with their values:
+
+```python
+
 {
-  "name": "Example",
-  "version": 1.0,
-  "settings": {
-    "debug": true,
-    "max_connections": 10,
-    "threshold": 0.85
-  }
+    "database": {
+        "username": "user123",
+        "password": "mysecretpassword",  # Replaced from environment
+        "host": "localhost"
+    },
+    "apikey": "abcd1234"  # Replaced from environment
 }
 ```

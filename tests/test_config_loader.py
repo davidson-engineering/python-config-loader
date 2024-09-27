@@ -1,8 +1,7 @@
 import pytest
 from pathlib import Path
-from config_loader import ConfigLoader
+from config_loader import ConfigLoader, load_configs
 from config_loader.config_loader import DuplicateConfigKeyError
-
 from conftest import config_file_mapping
 
 
@@ -176,3 +175,15 @@ def test_default_only(default_only_config):
     assert len(config["primary"]) == 4
     assert len(config["primary"]["secondary"]) == 4
     assert len(config["primary"]["secondary"]["tertiary"]) == 3
+
+
+def test_configs_with_secrets():
+
+    expected_output = {
+        "database": "secret_pass",
+        "apikey": "12345",
+        "plain_secret": "my_secret",
+    }
+
+    result = load_configs(filepaths="tests/config-test-secrets.yaml")
+    assert result == expected_output

@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Union, List, Dict, Any
 import logging
 
+from .secrets_loader import load_secrets, parse_secrets
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +31,7 @@ class DuplicateConfigKeyError(Exception):
 def load_configs(
     filepaths: Union[str, Path, List[Union[str, Path]]],
     default_directory: Union[str, Path, None] = None,
+    secrets_filepath: Union[str, Path, None] = None,
 ) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
     """
     Load and merge configurations for the filepaths.
@@ -37,7 +40,9 @@ def load_configs(
     Raise an error if multiple filepaths have the same stem.
     """
     loader = ConfigLoader(filepaths, default_directory)
-    return loader.load()
+    configs = loader.load()
+    loader.parse_secrets(configs, secrets_filepath)
+    return configs
 
 
 class ConfigLoader:
@@ -195,3 +200,13 @@ class ConfigLoader:
             import tomli as tomllib  # Fallback for older versions
         with open(filepath, "rb") as file:
             return tomllib.load(file)
+
+    @classmethod
+    def parse_secrets(cls, configs: dict[str, str], secrets_filepath=None) -> dict:
+        """
+        Parse secrets with environment variables.
+        """
+        # Load environment variables from secrets file
+        load_secrets(filepath=secrets_filepath)
+        # Replace environment variables in the configs
+        return parse_secrets(configs)

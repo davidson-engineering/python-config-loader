@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import pytest
 from config_loader import ConfigLoader
@@ -33,3 +34,13 @@ def default_only_config():
     return ConfigLoader(
         [config_file_mapping["defaultonly"]], default_directory=default_directory
     )
+
+
+@pytest.fixture(autouse=True)
+def setup_env_vars():
+    os.environ["DB_PASSWORD"] = "secret_pass"
+    os.environ["API_KEY"] = "12345"
+    yield
+    # Clean up environment variables after the test
+    del os.environ["DB_PASSWORD"]
+    del os.environ["API_KEY"]
