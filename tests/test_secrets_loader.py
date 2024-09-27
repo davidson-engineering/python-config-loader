@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from src.config_loader.secrets_loader import parse_secrets, get_secrets, load_secrets
+from config_loader.secrets_loader import parse_secrets, get_secrets, load_secrets
 
 
 # Set up environment variables before the test
