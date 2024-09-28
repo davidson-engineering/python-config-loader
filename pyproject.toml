@@ -2,9 +2,6 @@
 name = "python-config-loader"
 description = "A module to load and merge configuration files from multiple formats. Allows for parsing of environment variables and dotenv files."
 
-# If a project, then you can specify version here
-# version = "0.0.0"
-# If a module, then fetch version dynamically (see [tool.setuptools.dynamic] below)
 dynamic = ["version"]
 
 readme = "README.md"
@@ -27,7 +24,6 @@ classifiers = [
 
 dependencies = ["pyyaml >= 6.0.0", "python-dotenv>=1.0.1"]
 
-# If a module, then use fetch version from src/module_name/__init__.py
 [tool.setuptools.dynamic]
 version = { attr = "config_loader.__version__" }
 
