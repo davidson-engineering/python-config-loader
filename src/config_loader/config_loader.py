@@ -66,11 +66,13 @@ class ConfigLoader:
                 Path(filepath) if isinstance(filepath, str) else filepath
                 for filepath in filepaths
             ]
-
-        # If no default_directory is provided, use the default directory for defaults
-        self.default_directory = (
-            Path(default_directory) if default_directory else Path("config/default")
-        )
+        # If no default_directory is provided, use the default directory for defaults if it exists
+        # Otherwise, set it to None
+        if default_directory:
+            self.default_directory = Path(default_directory)
+        else:
+            if Path("config/default").exists():
+                self.default_directory = Path("config/default")
 
     def load(self) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
         """
@@ -80,37 +82,34 @@ class ConfigLoader:
         Raise an error if multiple filepaths have the same stem.
         """
         configs = {}
-        # Check if all filepaths exist and raise an error if not
+
         for filepath in self.filepaths:
-            default_filepath = self._get_default_filepath(filepath)
-            if not filepath.exists() and not default_filepath.exists():
-                raise FileNotFoundError(
-                    f"File not found: {filepath}, also no defaults found in {self.default_directory}"
-                )
-            if not filepath.exists() and default_filepath.exists():
-                logger.warning(
-                    f"File not found: {filepath}, but using defaults from {default_filepath}"
-                )
             stem = filepath.stem
+
+            # Ensure no duplicate stems across filepaths
             if stem in configs:
                 raise DuplicateConfigKeyError(
                     f"Duplicate configuration key detected: '{stem}' from file '{filepath}' conflicts with an existing file."
                 )
 
-            # Load the default configuration if it exists
+            # Check if the file or its default exists, and log appropriately
+            default_filepath = self._get_default_filepath(filepath)
+            if not filepath.exists():
+                if not default_filepath or not default_filepath.exists():
+                    raise FileNotFoundError(
+                        f"File not found: {filepath}. No default found in {self.default_directory}."
+                    )
+                logger.warning(
+                    f"File not found: {filepath}. Using default from {default_filepath}."
+                )
+
+            # Load configurations (default and user) and merge them
             default_config = self._load_defaults(filepath)
-            # Load the main configuration file
-            user_config = self._load_file(filepath)
-            # Merge the two configurations (default and main)
-            merged_config = self._merge_configs(default_config, user_config)
-            # Store the merged config with the filename stem (as a string) as the key
-            configs[stem] = merged_config
+            user_config = self._load_file(filepath) if filepath.exists() else {}
+            configs[stem] = self._merge_configs(default_config, user_config)
 
         # Return single config if only one filepath was provided
-        if len(self.filepaths) == 1:
-            return configs[self.filepaths[0].stem]
-
-        return configs
+        return configs[self.filepaths[0].stem] if len(self.filepaths) == 1 else configs
 
     def _load_file(self, filepath: Path) -> dict:
         """
@@ -134,27 +133,34 @@ class ConfigLoader:
         Load the corresponding default configuration file if it exists.
         If a default_directory was provided at initialization, use that. Otherwise, look in 'config/default/'.
         """
+        if self.default_directory is None:
+            return None
         return self.default_directory / Path(
             f"{filepath.stem}-default{filepath.suffix}"
         )
 
     def _load_defaults(self, filepath: Path) -> dict:
-        # If the default configuration file has the same extension as the main configuration file, load it
-        # If the default configuration file does not exists, then walk directory for a default configuration file with a different extension in default directory
-        # If found, warn the user and load it
+        # Determine the default configuration file path
         default_path = self._get_default_filepath(filepath)
-        if default_path.suffix == filepath.suffix and default_path.exists():
+
+        # If the default file exists and matches the main file's extension, load it
+        if (
+            default_path
+            and default_path.suffix == filepath.suffix
+            and default_path.exists()
+        ):
             return self._load_file(default_path)
-        elif not default_path.exists():
-            for file in self.default_directory.iterdir():
-                if (
-                    file.stem == filepath.stem + "-default"
-                    and file.suffix != filepath.suffix
-                ):
-                    logger.warning(
-                        f"Default configuration file with different extension found: {file}. Loading this file instead."
-                    )
-                    return self._load_file(file)
+
+        # Search for an alternative default file with a different extension
+        for file in self.default_directory.iterdir():
+            if (
+                file.stem == f"{filepath.stem}-default"
+                and file.suffix != filepath.suffix
+            ):
+                logger.warning(f"Loading default file with different extension: {file}")
+                return self._load_file(file)
+
+        # Return an empty dictionary if no suitable file is found
         return {}
 
     def _merge_configs(self, base_config: dict, new_config: dict) -> dict:

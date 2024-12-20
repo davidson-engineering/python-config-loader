@@ -60,3 +60,30 @@ def test_load_secrets_file():
 
     assert os.getenv("DB_PASSWORD2") == "secret_pass2"
     assert os.getenv("API_KEY2") == "123456"
+
+
+def test_env_secrets():
+    secrets = {
+        "database": "${DB_PASSWORD}",
+        "apikey": "${API_KEY}",
+        "plain_secret": "my_secret",
+    }
+
+    expected_output = {
+        "database": "12345",
+        "apikey": "12345",
+        "plain_secret": "my_secret",
+    }
+
+    os.environ["DB_PASSWORD"] = "12345"
+    os.environ["API_KEY"] = "12345"
+
+    result = parse_secrets(secrets)
+    assert result == expected_output
+
+    del os.environ["DB_PASSWORD"]
+    del os.environ["API_KEY"]
+
+    assert pytest.raises(
+        ValueError, match="Environment variable 'DB_PASSWORD' not found"
+    )
