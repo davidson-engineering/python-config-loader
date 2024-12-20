@@ -144,6 +144,9 @@ class ConfigLoader:
         # Determine the default configuration file path
         default_path = self._get_default_filepath(filepath)
 
+        if not default_path:
+            return {}
+
         # If the default file exists and matches the main file's extension, load it
         if (
             default_path
