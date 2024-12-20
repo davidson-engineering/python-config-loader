@@ -23,7 +23,11 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 
-dependencies = ["pyyaml >= 6.0.0", "python-dotenv>=1.0.1"]
+dependencies = [
+  "pyyaml >= 6.0.0",
+  "python-dotenv>=1.0.1",
+  "tomli >= 2.0.1 ; python_version < '3.11'",
+]
 
 [tool.setuptools.dynamic]
 version = { attr = "config_loader.__version__" }

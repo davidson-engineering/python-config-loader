@@ -267,10 +267,19 @@ class ConfigLoader:
         Returns:
             A dictionary representing the loaded configuration.
         """
-        import tomli
+        try:
+            import tomllib
+        except ImportError:
+            try:
+                import tomli as tomllib
+            except ImportError:
+                raise ImportError(
+                    "TOML parsing requires either the `tomllib` library (Python 3.11+) or the `tomli` package. "
+                    "Please install `tomli` with `pip install tomli` for Python versions below 3.11."
+                )
 
         with open(filepath, "rb") as file:
-            return tomli.load(file)
+            return tomllib.load(file)
 
     @classmethod
     def parse_secrets(
