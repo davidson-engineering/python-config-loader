@@ -70,9 +70,10 @@ class ConfigLoader:
         # Otherwise, set it to None
         if default_directory:
             self.default_directory = Path(default_directory)
+        elif Path("config/default").exists():
+            self.default_directory = Path("config/default")
         else:
-            if Path("config/default").exists():
-                self.default_directory = Path("config/default")
+            self.default_directory = None
 
     def load(self) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
         """
