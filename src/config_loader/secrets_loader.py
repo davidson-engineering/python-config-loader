@@ -1,9 +1,12 @@
+import logging
 import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from dotenv import dotenv_values
+
+logger = logging.getLogger(__name__)
 
 FILEPATH_SECRETS_DEFAULT = Path("./.env")
 
@@ -26,16 +29,24 @@ def load_secrets(filepath: Union[str, Path] = None) -> Dict:
     Raises:
         FileNotFoundError: If the specified `.env` file does not exist.
     """
-    filepath = filepath or FILEPATH_SECRETS_DEFAULT
+    env_secrets = {key: value for key, value in os.environ.items()}
+
+    if filepath is None and FILEPATH_SECRETS_DEFAULT.exists():
+        logger.warning(
+            f"No secrets file was specified, but file was found at {FILEPATH_SECRETS_DEFAULT}. Loading secrets from {FILEPATH_SECRETS_DEFAULT}"
+        )
+        filepath = FILEPATH_SECRETS_DEFAULT
+
+    if filepath is None:
+        return env_secrets
+
     if isinstance(filepath, str):
         filepath = Path(filepath)
 
     if not filepath.exists():
-        raise FileNotFoundError(f"File not found: {filepath}")
+        raise FileNotFoundError(f"Specified secrets file not found: {filepath}")
 
-    env_secrets = {key: value for key, value in os.environ.items()}
     file_secrets = dotenv_values(filepath)
-
     return {**env_secrets, **file_secrets}
 
 
