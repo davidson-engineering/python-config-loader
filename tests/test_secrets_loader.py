@@ -8,7 +8,7 @@ from config_loader.secrets_loader import parse_secrets, get_secrets, load_secret
 
 
 def test_parse_secrets_success():
-    secrets = {
+    config = {
         "database": "${DB_PASSWORD}",
         "apikey": "${API_KEY}",
         "plain_secret": "my_secret",
@@ -20,7 +20,7 @@ def test_parse_secrets_success():
         "plain_secret": "my_secret",
     }
 
-    result = parse_secrets(secrets)
+    result = parse_secrets(config)
     assert result == expected_output
 
 
@@ -56,10 +56,10 @@ def test_get_secrets_success():
 
 def test_load_secrets_file():
     secrets_filepath = "tests/test.env"
-    load_secrets(secrets_filepath)
+    secrets = load_secrets(secrets_filepath)
 
-    assert os.getenv("DB_PASSWORD2") == "secret_pass2"
-    assert os.getenv("API_KEY2") == "123456"
+    assert secrets["DB_PASSWORD2"] == "secret_pass2"
+    assert secrets["API_KEY2"] == "123456"
 
 
 def test_env_secrets():
@@ -87,3 +87,29 @@ def test_env_secrets():
     assert pytest.raises(
         ValueError, match="Environment variable 'DB_PASSWORD' not found"
     )
+
+
+def test_secrets_precendence():
+    config = {
+        "database": "${DB_PASSWORD}",
+        "apikey": "${API_KEY}",
+        "plain_secret": "my_secret",
+    }
+
+    expected_output = {
+        "database": "12345",
+        "apikey": "12345",
+        "plain_secret": "my_secret",
+    }
+
+    os.environ["DB_PASSWORD"] = "UNWANTED"
+    os.environ["API_KEY"] = "UNWANTED"
+
+    secrets = {
+        "DB_PASSWORD": "12345",
+        "API_KEY": "12345",
+    }
+
+    result = parse_secrets(config, secrets)
+
+    assert result == expected_output

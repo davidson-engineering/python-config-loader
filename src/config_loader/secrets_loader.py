@@ -1,9 +1,9 @@
 import os
 import re
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 FILEPATH_SECRETS_DEFAULT = Path("./.env")
 
@@ -14,10 +14,13 @@ def load_secrets(filepath: Union[str, Path] = None) -> dict:
     if isinstance(filepath, str):
         filepath = Path(filepath)
 
-    if not Path(filepath).exists() and filepath != FILEPATH_SECRETS_DEFAULT:
+    if not Path(filepath).exists():
         raise FileNotFoundError(f"File not found: {filepath}")
 
-    load_dotenv(filepath)
+    env_secrets = {key: value for key, value in os.environ.items()}
+    file_secrets = dotenv_values(filepath)
+
+    return {**env_secrets, **file_secrets}
 
 
 def get_secrets(secrets: list[str] = None) -> dict:
@@ -34,14 +37,14 @@ def get_secrets(secrets: list[str] = None) -> dict:
     return secrets
 
 
-def parse_secrets(configs: dict) -> dict:
+def parse_secrets(configs: dict, secrets: Optional[dict] = None) -> dict:
     """Parse secrets in configs, recursively replacing environment variables."""
     env_var_pattern = re.compile(r"\$\{(\w+)\}")
 
     def replace_env_var(match):
         var_name = match.group(1)
-        if var_name in os.environ:
-            return os.environ[var_name]
+        if var_name in secrets:
+            return secrets[var_name]
         else:
             raise ValueError(f"Environment variable '{var_name}' not found")
 
@@ -62,5 +65,9 @@ def parse_secrets(configs: dict) -> dict:
             # Return the value unchanged if it's not a string, dict, or list
             return value
 
+    if secrets is None:
+        secrets = load_secrets()
+    if not secrets:
+        return configs
     # Modify the original configs in place
     return parse_value(configs)

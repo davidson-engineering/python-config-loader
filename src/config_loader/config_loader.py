@@ -217,6 +217,6 @@ class ConfigLoader:
         Parse secrets with environment variables.
         """
         # Load environment variables from secrets file
-        load_secrets(filepath=secrets_filepath)
+        secrets = load_secrets(filepath=secrets_filepath)
         # Replace environment variables in the configs
-        return parse_secrets(configs)
+        return parse_secrets(configs, secrets)
