@@ -1,20 +1,36 @@
 import os
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 from dotenv import dotenv_values
 
 FILEPATH_SECRETS_DEFAULT = Path("./.env")
 
 
-def load_secrets(filepath: Union[str, Path] = None) -> dict:
-    """Load secrets from environment or a specified .env file"""
+def load_secrets(filepath: Union[str, Path] = None) -> Dict:
+    """
+    Load secrets from environment variables and an optional `.env` file.
+
+    This function combines secrets from the system's environment variables and
+    a specified `.env` file. If no filepath is provided, it defaults to `./.env`.
+
+    Args:
+        filepath: Path to the `.env` file. Defaults to `./.env`.
+
+    Returns:
+        A dictionary containing secrets from both the environment variables
+        and the `.env` file. Secrets from the environment override those from
+        the `.env` file.
+
+    Raises:
+        FileNotFoundError: If the specified `.env` file does not exist.
+    """
     filepath = filepath or FILEPATH_SECRETS_DEFAULT
     if isinstance(filepath, str):
         filepath = Path(filepath)
 
-    if not Path(filepath).exists():
+    if not filepath.exists():
         raise FileNotFoundError(f"File not found: {filepath}")
 
     env_secrets = {key: value for key, value in os.environ.items()}
@@ -23,8 +39,23 @@ def load_secrets(filepath: Union[str, Path] = None) -> dict:
     return {**env_secrets, **file_secrets}
 
 
-def get_secrets(secrets: list[str] = None) -> dict:
-    """Return specified secrets from environment"""
+def get_secrets(secrets: List[str] = None) -> Dict:
+    """
+    Retrieve specified secrets from the environment variables.
+
+    If no secrets are specified, all environment variables are returned.
+    Otherwise, only the specified secrets are retrieved.
+
+    Args:
+        secrets: A list of secret names to retrieve from the environment variables.
+                 Defaults to `None`, which retrieves all environment variables.
+
+    Returns:
+        A dictionary containing the requested secrets and their values.
+
+    Raises:
+        KeyError: If a requested secret is not found in the environment variables.
+    """
     if secrets is None:
         return dict(os.environ)
 
@@ -32,16 +63,58 @@ def get_secrets(secrets: list[str] = None) -> dict:
         if secret not in os.environ:
             raise KeyError(f"Secret not found: {secret}")
 
-    secrets = {secret: os.getenv(secret) for secret in secrets}
-
-    return secrets
+    return {secret: os.getenv(secret) for secret in secrets}
 
 
-def parse_secrets(configs: dict, secrets: Optional[dict] = None) -> dict:
-    """Parse secrets in configs, recursively replacing environment variables."""
+def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
+    """
+    Replace environment variable placeholders in configuration values.
+
+    This function recursively parses a configuration dictionary to replace
+    placeholders (in the form `${VAR_NAME}`) with values from the provided
+    secrets dictionary. If no secrets dictionary is provided, it loads secrets
+    using the `load_secrets` function.
+
+    Args:
+        configs: A dictionary containing configurations with potential environment variable placeholders.
+        secrets: An optional dictionary of secrets to use for placeholder replacement.
+                 If `None`, secrets are loaded using `load_secrets`.
+
+    Returns:
+        The configuration dictionary with environment variable placeholders replaced.
+
+    Raises:
+        ValueError: If a placeholder references an environment variable that is not found.
+
+    Example:
+        configs = {
+            "api_key": "${API_KEY}",
+            "nested": {"url": "http://${HOST}:${PORT}"}
+        }
+        secrets = {"API_KEY": "12345", "HOST": "example.com", "PORT": "8080"}
+
+        parse_secrets(configs, secrets)
+        # Result:
+        # {
+        #     "api_key": "12345",
+        #     "nested": {"url": "http://example.com:8080"}
+        # }
+    """
     env_var_pattern = re.compile(r"\$\{(\w+)\}")
 
     def replace_env_var(match):
+        """
+        Replace a matched environment variable placeholder with its value.
+
+        Args:
+            match: A regex match object for the placeholder.
+
+        Returns:
+            The value of the matched environment variable.
+
+        Raises:
+            ValueError: If the variable is not found in the secrets dictionary.
+        """
         var_name = match.group(1)
         if var_name in secrets:
             return secrets[var_name]
@@ -49,7 +122,15 @@ def parse_secrets(configs: dict, secrets: Optional[dict] = None) -> dict:
             raise ValueError(f"Environment variable '{var_name}' not found")
 
     def parse_value(value):
-        """Recursively parse a value to replace environment variables."""
+        """
+        Recursively parse a value to replace environment variable placeholders.
+
+        Args:
+            value: The value to parse. Can be a string, dictionary, or list.
+
+        Returns:
+            The parsed value with placeholders replaced.
+        """
         if isinstance(value, dict):
             # Recursively process dictionaries
             for k, v in value.items():
@@ -59,15 +140,15 @@ def parse_secrets(configs: dict, secrets: Optional[dict] = None) -> dict:
             # Recursively process lists
             return [parse_value(item) for item in value]
         elif isinstance(value, str):
-            # Apply the regex substitution to strings
+            # Apply regex substitution for placeholders in strings
             return env_var_pattern.sub(replace_env_var, value)
         else:
-            # Return the value unchanged if it's not a string, dict, or list
+            # Return other types unchanged
             return value
 
     if secrets is None:
         secrets = load_secrets()
     if not secrets:
         return configs
-    # Modify the original configs in place
+
     return parse_value(configs)
