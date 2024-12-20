@@ -187,3 +187,17 @@ def test_configs_with_secrets():
 
     result = load_configs(filepaths="tests/config-test-secrets.yaml")
     assert result == expected_output
+
+
+def test_no_default(no_default_config):
+    config = no_default_config.load()
+    assert config["name"] == "Example"
+    assert config["version"] == 1.0
+    assert config["settings"]["debug"] is True
+    assert config["settings"]["max_connections"] == 10
+    assert config["settings"]["threshold"] == 0.85
+    assert config["settings"]["timeout"] == 30.5
+    assert config["settings"]["nested_dict"]["inner_key"] == "inner_value"
+    assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
+    assert config["settings"]["complex_list"][0]["key1"] == "value1"
+    assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]

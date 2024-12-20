@@ -36,6 +36,11 @@ def default_only_config():
     )
 
 
+@pytest.fixture
+def no_default_config():
+    return ConfigLoader([config_file_mapping["yaml"]])
+
+
 @pytest.fixture(autouse=True)
 def setup_env_vars():
     os.environ["DB_PASSWORD"] = "secret_pass"
