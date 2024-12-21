@@ -1,5 +1,5 @@
 # python-config-loader
-## A module to load user configuration files from multiple formats, with support for default configurations.
+## A tool to load user configuration files from multiple formats, with support for default configurations.
 
 The `ConfigLoader` class is designed to handle configurations in multiple file formats (JSON, YAML, TOML). It allows you to merge configuration files, and optionally, you can provide a default configuration for each file.
 
@@ -10,12 +10,11 @@ To load and merge a single configuration file with its corresponding default con
 
 ```python
 
-from config_loader import ConfigLoader
+from config_loader import load_configs
 
-config1_filepath = "config/config1.toml"
-config_loader = ConfigLoader(config1_filepath)
-config1 = config_loader.load()
-print(config1)  # Returns the merged configuration for config1.toml
+config_filepath = "config/config1.toml"
+config = load_configs(config_filepath)
+print(config)  # Returns the merged configuration for config1.toml
 ```
 
 ### Loading Multiple Configuration Files
@@ -24,37 +23,27 @@ You can load and merge multiple configuration files at once. Each configuration 
 
 ```python
 
-from config_loader import ConfigLoader
+from config_loader import load_configs
 
 config1_filepath = "config/config1.toml"
 config2_filepath = "config/config2.toml"
-config_loader = ConfigLoader([config1_filepath, config2_filepath])
-configs = config_loader.load()
+configs = load_configs([config1_filepath, config2_filepath])
 
 config1 = configs["config1"]  # Access merged configuration for config1.toml
 config2 = configs["config2"]  # Access merged configuration for config2.toml
 ```
-### Loading Via function
-One can load configurations simply by calling a helper function
-```python
-from config_loader import load_configs
-config_filepaths = ["config/config1.toml", "config/config2.toml"]
-configs = load_configs(config_filepaths)
-print(configs["config1"])
-print(configs["config2"])
-```
+
 
 ### Providing a Custom Default File
 
 If you want to provide a custom default configuration file (instead of using the default directory `config/default/`), you can pass it to the `ConfigLoader`:
 
 ```python
-from config_loader import ConfigLoader
+from config_loader import load_configs
 
-config1_filepath = "config/config1.yaml"
+config_filepath = "config/config1.yaml"
 default_filepath = "custom/default/"
-config_loader = ConfigLoader(config1_filepath, default_filepath=default_filepath)
-config = config_loader.load()
+config = load_configs(config_filepath, default_filepath=default_filepath)
 print(config)  # Merged configuration with 'custom/default/config1-default.yaml'
 ```
 
@@ -63,11 +52,11 @@ print(config)  # Merged configuration with 'custom/default/config1-default.yaml'
 If two configuration files have the same stem (e.g., `config1.yaml` and `config1.json`), the loader will raise an error to prevent key conflicts:
 
 ```python
-from config_loader import ConfigLoader
+from config_loader import load_configs
 
 config1_filepath = "config/config1.yaml"
 config2_filepath = "config/config1.json"  # Conflict due to same stem as config1.yaml
-config_loader = ConfigLoader([config1_filepath, config2_filepath])  # Raises DuplicateConfigKeyError
+config_loader = load_configs([config1_filepath, config2_filepath])  # Raises DuplicateConfigKeyError
 ```
 
 ### Supported Formats
@@ -85,6 +74,8 @@ The `ConfigLoader` will automatically look for a corresponding default configura
 For example:
 
 - If loading `config1.yaml`, the loader will check for `config/default/config1-default.yaml`.
+
+Default configurations which exist at the default location will be loaded, unless the `load_defaults` argument is specifed as `False` to either the `ConfigLoader.loads()` or `load_configs` function.
 
 ### Secrets Parsing in Configurations
 

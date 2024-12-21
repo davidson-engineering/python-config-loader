@@ -17,6 +17,8 @@ import logging
 
 from .secrets_loader import load_secrets, parse_secrets
 
+import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +36,7 @@ def load_configs(
     filepaths: Union[str, Path, List[Union[str, Path]]],
     default_directory: Optional[Union[str, Path]] = None,
     secrets_filepath: Optional[Union[str, Path]] = None,
+    load_defaults=True,
 ) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
     """
     Load and merge configurations for the specified filepaths.
@@ -50,8 +53,12 @@ def load_configs(
     Raises:
         DuplicateConfigKeyError: If multiple filepaths have the same stem.
     """
+    logger.info(
+        f"Loading configurations from files: '{filepaths}'",
+        extra={"filepaths": filepaths},
+    )
     loader = ConfigLoader(filepaths, default_directory)
-    configs = loader.load()
+    configs = loader.load(load_defaults=load_defaults)
     loader.parse_secrets(configs, secrets_filepath)
     return configs
 
@@ -90,7 +97,9 @@ class ConfigLoader:
             else Path("config/default") if Path("config/default").exists() else None
         )
 
-    def load(self) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    def load(
+        self, load_defaults=True
+    ) -> Union[Dict[str, Any], Dict[str, Dict[str, Any]]]:
         """
         Load and merge configurations for the provided file paths.
 
@@ -124,10 +133,29 @@ class ConfigLoader:
                     f"File not found: {filepath}. Using default from {default_filepath}."
                 )
 
-            # Load the default configuration and the user-provided configuration
-            default_config = self._load_defaults(filepath)
+            # Load the default configuration and the user-provided configuration, unless defaults are disabled
+            if load_defaults:
+                default_config = self._load_defaults(filepath)
+                if default_config:
+                    logger.info(
+                        f"Loaded default configuration from file: '{default_filepath}'",
+                        extra={"default_filepath": default_filepath},
+                    )
+            else:
+                default_config = {}
+
             user_config = self._load_file(filepath) if filepath.exists() else {}
+            if user_config:
+                logger.info(
+                    f"Loaded user configuration from file: '{filepath}'",
+                    extra={"filepath": filepath},
+                )
             configs[stem] = self._merge_configs(default_config, user_config)
+
+        logger.info(
+            f"Loaded configurations: '{configs.keys()}'",
+            extra={"configs": list(configs.keys())},
+        )
 
         # Return a single configuration if only one file path was provided
         return configs[self.filepaths[0].stem] if len(self.filepaths) == 1 else configs
@@ -297,5 +325,9 @@ class ConfigLoader:
         Returns:
             The configurations with secrets resolved.
         """
+        logger.info(
+            f"Loading secrets from file: '{secrets_filepath}'",
+            extra={"secrets_filepath": secrets_filepath},
+        )
         secrets = load_secrets(filepath=secrets_filepath)
         return parse_secrets(configs, secrets)

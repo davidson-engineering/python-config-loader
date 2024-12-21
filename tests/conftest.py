@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import pytest
-from config_loader import ConfigLoader
+from config_loader.config_loader import ConfigLoader
 
 # Sample file paths for testing (assuming you have these test files in a `tests` directory)
 config_file_mapping = {

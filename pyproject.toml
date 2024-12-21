@@ -1,6 +1,6 @@
 [project]
 name = "python-config-loader"
-description = "A module to load and merge configuration files from multiple formats. Allows for parsing of environment variables and dotenv files."
+description = "A library tool to load and merge configuration files from multiple formats. Allows for parsing of environment variables and dotenv files."
 
 dynamic = ["version"]
 
@@ -13,8 +13,13 @@ authors = [
 ]
 
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
   "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Operating System :: MacOS",
+  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",

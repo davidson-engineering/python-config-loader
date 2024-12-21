@@ -6,9 +6,11 @@ from typing import Dict, List, Optional, Union
 
 from dotenv import dotenv_values
 
+import logging
+
 logger = logging.getLogger(__name__)
 
-FILEPATH_SECRETS_DEFAULT = Path("./.env")
+FILEPATH_SECRETS_DEFAULT = Path(".env")
 
 
 def load_secrets(filepath: Union[str, Path] = None) -> Dict:
@@ -19,7 +21,7 @@ def load_secrets(filepath: Union[str, Path] = None) -> Dict:
     a specified `.env` file. If no filepath is provided, it defaults to `./.env`.
 
     Args:
-        filepath: Path to the `.env` file. Defaults to `./.env`.
+        filepath: Path to the `.env` file. Defaults to `.env`.
 
     Returns:
         A dictionary containing secrets from both the environment variables
@@ -33,20 +35,27 @@ def load_secrets(filepath: Union[str, Path] = None) -> Dict:
 
     if filepath is None and FILEPATH_SECRETS_DEFAULT.exists():
         logger.warning(
-            f"No secrets file was specified, but file was found at {FILEPATH_SECRETS_DEFAULT}. Loading secrets from {FILEPATH_SECRETS_DEFAULT}"
+            f"No secrets file specified, but file found at {FILEPATH_SECRETS_DEFAULT}. Loading secrets from {FILEPATH_SECRETS_DEFAULT}"
         )
         filepath = FILEPATH_SECRETS_DEFAULT
 
     if filepath is None:
+        logger.debug(
+            f"No secrets file specified and no file found at {FILEPATH_SECRETS_DEFAULT}. Loading secrets from environment only"
+        )
         return env_secrets
 
     if isinstance(filepath, str):
         filepath = Path(filepath)
 
     if not filepath.exists():
-        raise FileNotFoundError(f"Specified secrets file not found: {filepath}")
+        raise FileNotFoundError(f"Specified secrets file was not found: '{filepath}'")
 
     file_secrets = dotenv_values(filepath)
+    logger.debug(
+        f"Loaded {len(file_secrets)} secrets from file: '{filepath}'",
+        extra={"secrets": file_secrets.keys()},
+    )
     return {**env_secrets, **file_secrets}
 
 
@@ -72,7 +81,7 @@ def get_secrets(secrets: List[str] = None) -> Dict:
 
     for secret in secrets:
         if secret not in os.environ:
-            raise KeyError(f"Secret not found: {secret}")
+            raise KeyError(f"Secret not found: '{secret}'")
 
     return {secret: os.getenv(secret) for secret in secrets}
 
@@ -128,6 +137,9 @@ def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
         """
         var_name = match.group(1)
         if var_name in secrets:
+            logger.debug(
+                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:3]}{(len(secrets[var_name])-3) * '*'}'"
+            )
             return secrets[var_name]
         else:
             raise ValueError(f"Environment variable '{var_name}' not found")

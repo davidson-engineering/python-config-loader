@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from config_loader import ConfigLoader, load_configs
+from config_loader.config_loader import ConfigLoader, load_configs
 from config_loader.config_loader import DuplicateConfigKeyError
 from conftest import config_file_mapping
 
@@ -126,7 +126,21 @@ def test_custom_default_incorrect_suffix():
     assert config["settings"]["default_unique_key"] == "other_value"
 
 
-def test_load_configs_function(multiple_configs):
+def test_load_configs_function_single(config_file):
+    from config_loader import load_configs
+
+    FILE = config_file_mapping["yaml"]
+
+    config = load_configs(FILE)
+    assert config["name"] == "Example"
+    assert config["version"] == 1.0
+    assert config["settings"]["debug"] is True
+    assert config["settings"]["max_connections"] == 10
+    assert config["settings"]["threshold"] == 0.85
+    assert config["settings"]["timeout"] == 30.5
+
+
+def test_load_configs_function_multi(multiple_configs):
     from config_loader import load_configs
 
     FILE1 = config_file_mapping["yaml"]
@@ -201,3 +215,23 @@ def test_no_default(no_default_config):
     assert config["settings"]["nested_dict"]["inner_list"] == [1, 2, 3]
     assert config["settings"]["complex_list"][0]["key1"] == "value1"
     assert config["settings"]["complex_list"][2]["key3"] == [10, 20, 30]
+
+
+def test_default_loading_override():
+    config = config_file_mapping["yaml"]
+    default_directory = Path("tests/default2/")
+    config_loader = ConfigLoader([config], default_directory=default_directory)
+    config = config_loader.load(load_defaults=False)
+
+    assert config["name"] == "Example"
+    assert config["version"] == 1.0
+    assert config["settings"]["debug"] is True
+    assert config["settings"]["path"] == "/var/data"
+    assert config["settings"]["max_connections"] == 10
+    with pytest.raises(KeyError):
+        config["default_unique_key"]
+
+    config = config_loader.load(load_defaults=True)
+
+    assert config["settings"]["path"] != "/default/path"
+    config["settings"]["default_unique_key"] == "other_value"
