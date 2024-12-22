@@ -118,9 +118,12 @@ class ConfigLoader:
 
             # Check for duplicate stems in the provided file paths
             if stem in configs:
-                raise DuplicateConfigKeyError(
-                    f"Duplicate configuration key detected: '{stem}' from file '{filepath}' conflicts with an existing file."
+                message = f"Duplicate configuration key detected: '{stem}' from file '{filepath}' conflicts with an existing file."
+                logging.error(
+                    message,
+                    extra={"stem": stem, "filepath": filepath},
                 )
+                raise DuplicateConfigKeyError(message)
 
             # Determine if a default configuration file exists for this file
             default_filepath = self._get_default_filepath(filepath)
@@ -137,7 +140,7 @@ class ConfigLoader:
             if load_defaults:
                 default_config = self._load_defaults(filepath)
                 if default_config:
-                    logger.info(
+                    logger.debug(
                         f"Loaded default configuration from file: '{default_filepath}'",
                         extra={"default_filepath": default_filepath},
                     )
@@ -146,7 +149,7 @@ class ConfigLoader:
 
             user_config = self._load_file(filepath) if filepath.exists() else {}
             if user_config:
-                logger.info(
+                logger.debug(
                     f"Loaded user configuration from file: '{filepath}'",
                     extra={"filepath": filepath},
                 )
@@ -325,7 +328,7 @@ class ConfigLoader:
         Returns:
             The configurations with secrets resolved.
         """
-        logger.info(
+        logger.debug(
             f"Loading secrets from file: '{secrets_filepath}'",
             extra={"secrets_filepath": secrets_filepath},
         )

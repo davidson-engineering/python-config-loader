@@ -235,3 +235,25 @@ def test_default_loading_override():
 
     assert config["settings"]["path"] != "/default/path"
     config["settings"]["default_unique_key"] == "other_value"
+
+
+def test_duplicate_file_loading():
+    config1 = config_file_mapping["yaml"]
+    config2 = config_file_mapping["toml"]
+    config_loader = ConfigLoader([config1, config2])
+    with pytest.raises(DuplicateConfigKeyError):
+        config_loader.load()
+
+
+def test_default_file_doesnt_exist():
+    config = "tests/false-file.yaml"
+    default_directory = Path("tests/default3/")
+    config_loader = ConfigLoader([config], default_directory=default_directory)
+    with pytest.raises(FileNotFoundError):
+        config_loader.load()
+
+
+def test_unsupported_file_format():
+    config = "tests/unsupported_file.xyz"
+    with pytest.raises(ValueError):
+        ConfigLoader([config]).load()

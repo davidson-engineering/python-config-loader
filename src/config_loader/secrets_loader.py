@@ -137,8 +137,9 @@ def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
         """
         var_name = match.group(1)
         if var_name in secrets:
+            visible_length = min(3, len(secrets[var_name]))
             logger.debug(
-                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:3]}{(len(secrets[var_name])-3) * '*'}'"
+                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:visible_length]}{(len(secrets[var_name])-visible_length) * '*'}'"
             )
             return secrets[var_name]
         else:

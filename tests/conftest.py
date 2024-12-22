@@ -10,6 +10,7 @@ config_file_mapping = {
     "json": Path("tests/config-test.json"),
     "toml2": Path("tests/config2-test.toml"),
     "defaultonly": Path("tests/defaultonly.toml"),
+    "secrets-test": Path("tests/config-test-secrets.yaml"),
 }
 default_directory = Path("tests/default/")
 

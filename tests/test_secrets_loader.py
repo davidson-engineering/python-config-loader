@@ -2,8 +2,11 @@ import os
 import pytest
 
 from config_loader.secrets_loader import parse_secrets, get_secrets, load_secrets
+from config_loader import load_configs
 
 # Set up environment variables before the test
+
+from conftest import config_file_mapping
 
 
 def test_parse_secrets_success():
@@ -86,6 +89,16 @@ def test_env_secrets():
     assert pytest.raises(
         ValueError, match="Environment variable 'DB_PASSWORD' not found"
     )
+
+
+def text_load_env_secrets_only():
+    secret = "UNWANTED"
+    os.environ["DB_PASSWORD"] = secret
+
+    config = config_file_mapping["secrets-test"]
+    result = load_configs(config)
+
+    assert result["database"] == secret
 
 
 def test_secrets_precendence():
