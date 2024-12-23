@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 FILEPATH_SECRETS_DEFAULT = Path(".env")
 MIN_EXPOSED_LENGTH = 3
-MAX_VISIBLE_LENGTH = 20
+MAX_VISIBLE_LENGTH = 15
 
 
 def load_secrets(filepath: Union[str, Path] = None) -> Dict:
@@ -42,7 +42,7 @@ def load_secrets(filepath: Union[str, Path] = None) -> Dict:
         filepath = FILEPATH_SECRETS_DEFAULT
 
     if filepath is None:
-        logger.debug(
+        logger.info(
             f"No secrets file specified and no file found at {FILEPATH_SECRETS_DEFAULT}. Loading secrets from environment only"
         )
         return env_secrets
@@ -54,7 +54,7 @@ def load_secrets(filepath: Union[str, Path] = None) -> Dict:
         raise FileNotFoundError(f"Specified secrets file was not found: '{filepath}'")
 
     file_secrets = dotenv_values(filepath)
-    logger.debug(
+    logger.info(
         f"Loaded {len(file_secrets)} secrets from file: '{filepath}'",
         extra={"secrets": file_secrets.keys()},
     )
@@ -142,7 +142,7 @@ def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
             visible_length = min(MIN_EXPOSED_LENGTH, len(secrets[var_name]))
             max_total_length = max(MAX_VISIBLE_LENGTH, len(secrets[var_name]))
             logger.debug(
-                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:visible_length]}{(max_total_length-visible_length) * '*'}'"
+                f"Replacing placeholder with value: `{var_name}` -> `{secrets[var_name][:visible_length]}{(max_total_length-visible_length) * '*'}`"
             )
             return secrets[var_name]
         else:

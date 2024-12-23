@@ -156,7 +156,7 @@ class ConfigLoader:
             configs[stem] = self._merge_configs(default_config, user_config)
 
         logger.info(
-            f"Loaded configurations: '{configs.keys()}'",
+            f"Loaded configurations: '{list(configs.keys())}'",
             extra={"configs": list(configs.keys())},
         )
 
@@ -328,9 +328,5 @@ class ConfigLoader:
         Returns:
             The configurations with secrets resolved.
         """
-        logger.debug(
-            f"Loading secrets from file: '{secrets_filepath}'",
-            extra={"secrets_filepath": secrets_filepath},
-        )
         secrets = load_secrets(filepath=secrets_filepath)
         return parse_secrets(configs, secrets)

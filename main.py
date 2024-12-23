@@ -7,7 +7,7 @@
 """Example usage of the config_loader package."""
 # ---------------------------------------------------------------------------
 
-
+import logging
 from config_loader.config_loader import load_configs
 
 
@@ -42,4 +42,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()
