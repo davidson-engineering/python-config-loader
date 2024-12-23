@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 FILEPATH_SECRETS_DEFAULT = Path(".env")
 MIN_EXPOSED_LENGTH = 3
-VISIBLE_LENGTH = 12
+VISIBLE_LENGTH = 14
 
 
 def load_secrets(filepath: Union[str, Path] = None) -> Dict:
@@ -141,7 +141,7 @@ def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
         if var_name in secrets:
             exposed_length = min(MIN_EXPOSED_LENGTH, len(secrets[var_name]))
             logger.debug(
-                f"Replacing placeholder with value: `{var_name}` -> `{secrets[var_name][:exposed_length]}{(VISIBLE_LENGTH-exposed_length) * '*'}...`"
+                f"Replacing placeholder with value: `{var_name}` -> `{secrets[var_name][:exposed_length]}{(VISIBLE_LENGTH-exposed_length) * '*'}`"
             )
             return secrets[var_name]
         else:
