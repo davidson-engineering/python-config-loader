@@ -11,6 +11,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 FILEPATH_SECRETS_DEFAULT = Path(".env")
+MIN_EXPOSED_LENGTH = 3
+MAX_VISIBLE_LENGTH = 20
 
 
 def load_secrets(filepath: Union[str, Path] = None) -> Dict:
@@ -137,9 +139,10 @@ def parse_secrets(configs: Dict, secrets: Optional[Dict] = None) -> Dict:
         """
         var_name = match.group(1)
         if var_name in secrets:
-            visible_length = min(3, len(secrets[var_name]))
+            visible_length = min(MIN_EXPOSED_LENGTH, len(secrets[var_name]))
+            max_total_length = max(MAX_VISIBLE_LENGTH, len(secrets[var_name]))
             logger.debug(
-                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:visible_length]}{(len(secrets[var_name])-visible_length) * '*'}'"
+                f"Replacing placeholder with value: '{var_name}' -> '{secrets[var_name][:visible_length]}{(max_total_length-visible_length) * '*'}'"
             )
             return secrets[var_name]
         else:
